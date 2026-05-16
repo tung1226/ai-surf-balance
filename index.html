@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>衝浪姿勢互動評分 App</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu@4.22.0/dist/tf-backend-cpu.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <h1>衝浪姿勢評分</h1>
+            <p>趴板、撐起、起乘、浪上站姿</p>
+          </div>
+        </div>
+        <div class="system-status" id="modelStatus" aria-live="polite">模型尚未啟動</div>
+      </header>
+
+      <section class="workbench" aria-label="衝浪姿勢評分工作區">
+        <aside class="reference-panel">
+          <div class="section-title">
+            <span>四步參考</span>
+            <strong id="completedCount">0/4</strong>
+          </div>
+          <div class="step-list" id="stepList">
+            <button class="step-card is-active" type="button" data-step="0">
+              <span class="reference-frame ref-one" aria-hidden="true"></span>
+              <span class="step-copy">
+                <strong>1. 趴板與划水</strong>
+                <span>身體貼近板面，胸口微抬</span>
+              </span>
+              <span class="step-state">未測</span>
+            </button>
+            <button class="step-card" type="button" data-step="1">
+              <span class="reference-frame ref-two" aria-hidden="true"></span>
+              <span class="step-copy">
+                <strong>2. 雙手撐板</strong>
+                <span>手臂打直，上半身抬起</span>
+              </span>
+              <span class="step-state">未測</span>
+            </button>
+            <button class="step-card" type="button" data-step="2">
+              <span class="reference-frame ref-three" aria-hidden="true"></span>
+              <span class="step-copy">
+                <strong>3. 起乘收腳</strong>
+                <span>前腳跨入，身體保持低姿</span>
+              </span>
+              <span class="step-state">未測</span>
+            </button>
+            <button class="step-card" type="button" data-step="3">
+              <span class="reference-frame ref-four" aria-hidden="true"></span>
+              <span class="step-copy">
+                <strong>4. 浪上站姿</strong>
+                <span>側身微蹲，雙手展開平衡</span>
+              </span>
+              <span class="step-state">未測</span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="camera-panel">
+          <div class="stage-header">
+            <div>
+              <span class="eyebrow" id="currentStepTag">STEP 1</span>
+              <h2 id="currentStepTitle">趴板與划水</h2>
+            </div>
+            <div class="hold-box">
+              <span id="holdText">穩定 0.0 秒</span>
+              <span class="hold-meter" aria-hidden="true"><span id="holdMeter"></span></span>
+            </div>
+          </div>
+
+          <div class="video-stage" id="videoStage">
+            <video id="cameraFeed" autoplay muted playsinline></video>
+            <canvas id="poseCanvas"></canvas>
+            <div class="stage-placeholder" id="stagePlaceholder">
+              <strong>開啟鏡頭後開始評分</strong>
+              <span>鏡頭需拍到全身側面，距離約 2 到 3 公尺。</span>
+            </div>
+          </div>
+
+          <div class="control-bar">
+            <button class="primary-action" id="startButton" type="button">啟動鏡頭</button>
+            <button class="icon-action" id="prevButton" type="button" aria-label="上一個動作">上一個</button>
+            <button class="icon-action" id="nextButton" type="button" aria-label="下一個動作">下一個</button>
+            <label class="toggle-control">
+              <input id="mirrorToggle" type="checkbox" checked>
+              <span>鏡像</span>
+            </label>
+          </div>
+        </section>
+
+        <aside class="score-panel">
+          <div class="section-title">
+            <span>即時評分</span>
+            <strong id="passState">待測</strong>
+          </div>
+          <div class="score-dial" id="scoreDial" style="--score: 0">
+            <span id="scoreValue">0</span>
+            <small>分</small>
+          </div>
+          <p class="feedback" id="feedbackText">選擇動作並啟動鏡頭。</p>
+          <div class="metric-list" id="metricList"></div>
+          <div class="safety-note">請在乾燥平坦處練習，周圍保留足夠空間。</div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
